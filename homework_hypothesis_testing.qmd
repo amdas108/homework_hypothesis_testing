@@ -204,10 +204,10 @@ ci$conf.int
 
 > Обратите внимание на порядок вычитания средних: он определяет знак разности и её интерпретацию.
 
-Разность средних масс съедобной части молюска (самцы - самки)
+Разность средних масс съедобной части молюска ($\mu$(самцы) - $\mu$(самки))
 
-- $H_0$: $\mu$
-- $H_a$: ......
+- $H_0$: $\mu$(самцы) - $\mu$(самки) = 0 
+- $H_a$: $\mu$(самцы) - $\mu$(самки) > 0
 
 ### Задание 2.2
 
@@ -217,15 +217,80 @@ ci$conf.int
 Предположите по графикам, больше ли средняя масса съедобной части моллюска у самцов, чем у самок.
 
 ```{r descriptive-stats-shucked-weight}
+weight_data <- subset(abalone, Sex %in% c("M", "F"))
 
+stats_weight <- data.frame(
+  Пол = c("Самки", "Самцы"),
+  Количество = c(
+    sum(weight_data$Sex == "F"),
+    sum(weight_data$Sex == "M")
+  ),
+  Среднее = c(
+    mean(weight_data$Shucked_weight[weight_data$Sex == "F"]),
+    mean(weight_data$Shucked_weight[weight_data$Sex == "M"])
+  ),
+  Медиана = c(
+    median(weight_data$Shucked_weight[weight_data$Sex == "F"]),
+    median(weight_data$Shucked_weight[weight_data$Sex == "M"])
+  ),
+  Стандартное_отклонение = c(
+    sd(weight_data$Shucked_weight[weight_data$Sex == "F"]),
+    sd(weight_data$Shucked_weight[weight_data$Sex == "M"])
+  )
+)
+
+knitr::kable(
+  stats_weight,
+  digits = 3,
+  caption = "Описательные статистики массы съедобной части у самцов и самок"
+)
+
+ggplot(weight_data, aes(x = Shucked_weight, fill = Sex)) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(
+    values = c("F" = "#CC79A7", "M" = "#0072B2"),
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  labs(
+    title = "Распределение массы съедобной части\nу самцов и самок",
+    x = "Масса съедобной части, г",
+    y = "Плотность распределения",
+    fill = "Пол"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "top"
+  )
+ggplot(weight_data, aes(x = Sex, y = Shucked_weight, fill = Sex)) +
+  geom_boxplot(alpha = 0.4) +
+  scale_fill_manual(
+    values = c("F" = "#CC79A7", "M" = "#0072B2"),
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  scale_x_discrete(
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  labs(
+    title = "Сравнение массы съедобной части\nу самцов и самок",
+    x = "Пол",
+    y = "Масса съедобной части, г",
+    fill = "Пол"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "bottom"
+  )
 ```
-
+Распределения имеют схожую форму: оба ассиметричны и смещены влево с длинным хвостом справа. Пик для самцов левее и ниже относительно пика самок. Могу предположить что средняя масса у самцов ниже, чем у самок.
 ......
 
 ### Задание 2.3
 
 Выберите подходящий тип доверительного интервала и объясните, почему он соответствует исследовательскому вопросу.
 
+Также, как и в 1 задании применим тест Уэлча: обе выборки независимы, сравниваем средние, и равенство дисперсий не важно. Так как будем вычитать среднюю массу самцов из средней массы самок, если доверительный интервал весь будет выше 0, то средняя масса самцов будет больше, а если будет содержать 0, то сделаем вывод, что данных недостаточно, чтобы отвергнуть гипотезу о равенстве средних на уровне значимости 0,05.
 ......
 
 ### Задание 2.4
