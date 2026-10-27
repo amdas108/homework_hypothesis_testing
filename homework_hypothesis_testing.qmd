@@ -46,12 +46,20 @@ format:
 #| warning: false
 #| echo: false
 library(ggplot2)
+library(dplyr)
 ```
 
 Загрузите данные и оцените, требуется ли подготовка данных для анализа. Все ли признаки нужного типа?
 
 ```{r prepare-data}
+abalone <- read.csv("data/abalone.csv")
 
+str(abalone)
+
+colSums(is.na(abalone))
+
+sapply(abalone[, c("Sex", "Length",
+                   "Shucked_weight", "Shell_weight")], class)
 ```
 
 ------------------------------------------------------------------------
@@ -66,8 +74,8 @@ library(ggplot2)
 
 .....
 
-- $H_0$: .....
-- $H_a$: .....
+- $H_0$: Средняя длина раковины самок равна средней длине раковины самцов
+- $H_a$: Средняя длина раковины самок не равна средней длине раковины самцов
 
 ### Задание 1.2
 
@@ -77,10 +85,72 @@ library(ggplot2)
 Предположите по графикам, различается ли средняя длина раковины между сравниваемыми группами.
 
 ```{r descriptive-stats-length}
-  
+stats <- data.frame(
+  Пол = c("Самки", "Самцы"),
+  Количество = c(
+    sum(abalone$Sex == "F"),
+    sum(abalone$Sex == "M")
+  ),
+  Среднее = c(
+    mean(abalone$Length[abalone$Sex == "F"]),
+    mean(abalone$Length[abalone$Sex == "M"])
+  ),
+  Медиана = c(
+    median(abalone$Length[abalone$Sex == "F"]),
+    median(abalone$Length[abalone$Sex == "M"])
+  ),
+  Стандартное_отклонение = c(
+    sd(abalone$Length[abalone$Sex == "F"]),
+    sd(abalone$Length[abalone$Sex == "M"])
+  )
+)
 
+knitr::kable(
+  stats,
+  digits = 3,
+  caption = "Описательные статистики длины раковины самцов и самок"
+)
+
+ggplot(length_data, aes(x = Length, fill = Sex)) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(
+    values = c("F" = "#CC79A7", "M" = "#0072B2"),
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  labs(
+    title = "Распределение длины раковины\nу самцов и самок",
+    x = "Длина раковины, мм",
+    y = "Плотность распределения",
+    fill = "Пол"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "top"
+  )
+
+ggplot(length_data, aes(x = Sex, y = Length, fill = Sex)) +
+  geom_boxplot(alpha = 0.4) +
+  scale_fill_manual(
+    values = c("F" = "#CC79A7", "M" = "#0072B2"),
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  scale_x_discrete(
+    labels = c("F" = "Самки", "M" = "Самцы")
+  ) +
+  labs(
+    title = "Сравнение длины раковины\nу самцов и самок",
+    x = "Пол",
+    y = "Длина раковины, мм"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
 ```
-
+И у самцов и самок по 1 пику с вытянутым хвостом - почти колокообразная форма. Пик самок выше и смещен вправо, а у самцов больше особей с раковиной меньшей длины так, что боксплоты показывают их как выбросы (ниже нижнего квартиля). Средние и медианы, судя по описательным статистикам, равны.
+Я предполагаю что средняя длина раковины у сравниваемых групп различается из-за смещения пика у самок и множества коротких раковин у самцов.
 .....
 
 ### Задание 1.3
